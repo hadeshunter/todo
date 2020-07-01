@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/hadeshunter/todo/server"
 	"os"
 	"fmt"
 	"log"
@@ -38,4 +39,7 @@ func main() {
 		}
 		fmt.Printf("%s %d. %s\n", indicator, index+1, item.Title)
 	}
+
+	server:= server.New()
+	server.Start(":5000")
 }
