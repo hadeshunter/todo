@@ -19,10 +19,13 @@ var authHandler = func(next http.Handler) http.Handler {
 		var phone string
 		allowPaths := []string{
 			"/",
-			"/login",			
+			"/login",
 			"/user/create",
 			"/user/all",
 			"/item/create",
+			"/item/{id:[0-9]+}/delete",
+			"/item/{id:[0-9]+}/complete",
+			"/item/{id:[0-9]+}/toggle",
 			"/item/all",
 		}
 		for _, path := range allowPaths {

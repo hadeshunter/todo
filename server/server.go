@@ -1,11 +1,12 @@
 package server
 
 import (
-	"github.com/hadeshunter/todo/database"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/hadeshunter/todo/database"
 
 	"github.com/rs/cors"
 
@@ -17,15 +18,15 @@ import (
 
 // Server will handle all request via rest API
 type Server struct {
-	router    *mux.Router
-	db        *database.Database
-	running   bool
+	router  *mux.Router
+	db      *database.Database
+	running bool
 }
 
 // New return instance of server
 func New() *Server {
 	server := &Server{
-		db:     database.New(os.Getenv("DATABASE_URL")),
+		db: database.New(os.Getenv("DATABASE_URL")),
 	}
 	server.initializeRoutes()
 	return server
@@ -38,7 +39,9 @@ func (server *Server) initializeRoutes() {
 	server.router.HandleFunc("/user/create", server.createUser).Methods("POST")
 	server.router.HandleFunc("/user/all", server.getAllUsers).Methods("GET")
 	server.router.HandleFunc("/item/create", server.createItem).Methods("POST")
-	server.router.HandleFunc("/item/complete", server.completeItem).Methods("PUT")
+	server.router.HandleFunc("/item/{id:[0-9]+}/delete", server.deleteItem).Methods("DELETE")
+	server.router.HandleFunc("/item/{id:[0-9]+}/complete", server.completeItem).Methods("PUT")
+	server.router.HandleFunc("/item/{id:[0-9]+}/toggle", server.toggleItem).Methods("PUT")
 	server.router.HandleFunc("/item/all", server.listAllItems).Methods("GET")
 }
 

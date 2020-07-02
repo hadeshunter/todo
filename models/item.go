@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,12 +16,12 @@ type Item struct {
 // MarshalJSON return the json object of item
 func (i *Item) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID			uint		`json:"id"`
-		Title		string	`json:"name"`
-		IsDone	bool		`json:"is_done"`
+		ID     uint   `json:"id"`
+		Title  string `json:"title"`
+		IsDone bool   `json:"is_done"`
 	}{
-		ID:			i.ID,
-		Title:	i.Title,
-		IsDone:	i.IsDone,
+		ID:     i.ID,
+		Title:  i.Title,
+		IsDone: i.IsDone,
 	})
 }

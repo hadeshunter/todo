@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -26,15 +27,15 @@ type User struct {
 
 // MarshalJSON return the json object of user
 func (u *User) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct{
-		ID			uint			`json:"id"`
-		Name		string		`json:"name"`
-		Phone		string		`json:"phone"`
-		Email		string		`json:"email"`
+	return json.Marshal(&struct {
+		ID    uint   `json:"id"`
+		Name  string `json:"name"`
+		Phone string `json:"phone"`
+		Email string `json:"email"`
 	}{
-		ID:			u.ID,
-		Name:		u.Name,
-		Phone:	u.Phone,
-		Email:	u.Email,
+		ID:    u.ID,
+		Name:  u.Name,
+		Phone: u.Phone,
+		Email: u.Email,
 	})
 }

@@ -3,9 +3,12 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-func (server *Server) createItem(w http.ResponseWriter, r *http.Request){
+func (server *Server) createItem(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var body struct {
 		Title string `json:"title"`
@@ -16,28 +19,46 @@ func (server *Server) createItem(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	if item, err := server.db.CreateItem(body.Title); err!= nil{
+	if item, err := server.db.CreateItem(body.Title); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to create item")
 	} else {
 		respondWithJSON(w, http.StatusCreated, item)
 	}
 }
 
-func (server *Server) completeItem(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var body struct {
-		ID uint `json:"id"`
-	}
-
-	if err := decoder.Decode(&body); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Request body is invalid")
+func (server *Server) deleteItem(w http.ResponseWriter, r *http.Request) {
+	if id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
 		return
-	}
-
-	if err := server.db.CompleteItem(body.ID); err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to complete item")
+	} else if item, err := server.db.DeleteItem(uint(id)); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
 	} else {
-		respondWithJSON(w, http.StatusOK, "")
+		respondWithJSON(w, http.StatusOK, &item)
+	}
+}
+
+func (server *Server) toggleItem(w http.ResponseWriter, r *http.Request) {
+	if id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	} else if item, err := server.db.ToggleItem(uint(id)); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	} else {
+		respondWithJSON(w, http.StatusOK, &item)
+	}
+}
+
+func (server *Server) completeItem(w http.ResponseWriter, r *http.Request) {
+	if id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 64); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	} else if item, err := server.db.CompleteItem(uint(id)); err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	} else {
+		respondWithJSON(w, http.StatusOK, &item)
 	}
 }
 
