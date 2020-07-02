@@ -1,60 +1,84 @@
 package server
 
 import (
-	"encoding/json"
-	"net/http"
-	"log"
-	"os"
-	"github.com/rs/cors"
-	"github.com/gorilla/mux"
 	"github.com/hadeshunter/todo/database"
+	"encoding/json"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/rs/cors"
+
+	"github.com/gorilla/mux"
+
+	// database driver
+	_ "github.com/lib/pq"
 )
-// Server api
-type Server struct{
-	db *database.Database
+
+// Server will handle all request via rest API
+type Server struct {
+	router    *mux.Router
+	db        *database.Database
+	running   bool
 }
-// New server
-func New() *Server{
+
+// New return instance of server
+func New() *Server {
 	server := &Server{
-		db: database.New(os.Getenv("DATABASE_URL")),
+		db:     database.New(os.Getenv("DATABASE_URL")),
 	}
+	server.initializeRoutes()
 	return server
 }
-// Start server
-func (server *Server) Start(url string) {
-	router := mux.NewRouter()
-	router.HandleFunc("/", server.sayHello).Methods("GET")
-	log.Println("Server is starting at", url)
 
-	//------ Handle here------//
-	router.HandleFunc("/item/create", server.createItem).Methods("POST")
-	router.HandleFunc("/item/complete", server.completeItem).Methods("PUT")
-	router.HandleFunc("/item/all", server.listAllItems).Methods("GET")
-	//------------------------//
-
-	corsPolicy := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowCredentials: true,
-		AllowedMethods: []string{"POST", "DELETE", "PUT", "GET", "HEAD", "OPTIONS"},
-		AllowedHeaders: []string{"*"},
-	})
-	handlerWithCors := corsPolicy.Handler(router)
-	http.ListenAndServe(url, handlerWithCors)
+func (server *Server) initializeRoutes() {
+	server.router = mux.NewRouter()
+	server.router.Use(authHandler)
+	server.router.HandleFunc("/login", server.handleLogin).Methods("GET")
+	server.router.HandleFunc("/user/create", server.createUser).Methods("POST")
+	server.router.HandleFunc("/user/all", server.getAllUsers).Methods("GET")
+	server.router.HandleFunc("/item/create", server.createItem).Methods("POST")
+	server.router.HandleFunc("/item/complete", server.completeItem).Methods("PUT")
+	server.router.HandleFunc("/item/all", server.listAllItems).Methods("GET")
 }
 
-func (server *Server) sayHello(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello Trí"))
+// Start the server
+func (server *Server) Start(url string) {
+	server.running = true
+
+	// TODO: Find the way to monitor better
+	// go server.monitorPayment()
+
+	log.Println("Server is ready at", url)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"POST", "DELETE", "PUT", "GET", "HEAD", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+	})
+	handler := c.Handler(server.router)
+	http.ListenAndServe(url, handler)
+}
+
+// Stop the server
+func (server *Server) Stop() {
+	log.Println("Try to shutdown gracefully...")
+	server.running = false
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error":message})
+	respondWithJSON(w, code, map[string]string{"error": message})
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}){
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	w.Write(response)
+}
+
+// GetRouter ..
+func (server *Server) GetRouter() *mux.Router {
+	return server.router
 }

@@ -4,10 +4,13 @@ services:
     ports:
       - 5000:5000
     build: .
+    restart: always
     depends_on:
       - db
     environment:
       DATABASE_URL: postgres://trihm:@db:5432/training_db?sslmode=disable
+      ADDRESS_DATABASE: address.csv
+      SERVER_SECRET: secret
 
   db:
     ports:
