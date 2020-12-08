@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/hadeshunter/todo/models"
@@ -13,7 +15,7 @@ import (
 // Database todo
 type Database struct {
 	instance *gorm.DB
-	URL string
+	URL      string
 }
 
 // New database
@@ -35,4 +37,20 @@ func (db *Database) initialize() {
 func (db *Database) migrate() {
 	db.instance.AutoMigrate(&models.User{})
 	db.instance.AutoMigrate(&models.Item{})
+}
+
+// ConnectOracle Connect Oracle Database
+func ConnectOracle() {
+	// Connect oracle database
+	db, err := sql.Open("oci8", "khanhnv/2305@exax7-scan.vnpthcm.vn:1521/SGN")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	if err = db.Ping(); err != nil {
+		fmt.Printf("Error connecting to the database: %s\n", err)
+		return
+	}
 }
