@@ -1,11 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
-	"github.com/hadeshunter/todo/server"
-	"github.com/joho/godotenv"
+	"github.com/hadeshunter/todo/database"
 	_ "github.com/mattn/go-oci8"
 )
 
@@ -53,23 +51,15 @@ func main() {
 	// 	fmt.Printf("%s %d. %s\n", indicator, index+1, item.Title)
 	// }
 
-	godotenv.Load()
-	server := server.New()
-	server.Start(":5000")
+	// godotenv.Load()
+	// server := server.New()
+	// server.Start(":5000")
 
 	// Connect oracle database
-	db, err := sql.Open("oci8", "khanhnv/2305@exax7-scan.vnpthcm.vn:1521/SGN")
+	db, err := database.ConnectOracle()
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
-	defer db.Close()
-
-	if err = db.Ping(); err != nil {
-		fmt.Printf("Error connecting to the database: %s\n", err)
-		return
-	}
-
 	rows, err := db.Query("select donvi_id, ten_dv, donvi_cha_id, ten_dvql from ADMIN_HCM.donvi where donvi_cha_id = :1 and donvi_ql = :2", 41, 0)
 	if err != nil {
 		fmt.Println("Error fetching ADMIN_HCM.donvi")

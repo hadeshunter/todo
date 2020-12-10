@@ -40,17 +40,17 @@ func (db *Database) migrate() {
 }
 
 // ConnectOracle Connect Oracle Database
-func ConnectOracle() {
+func ConnectOracle() (*sql.DB, error) {
 	// Connect oracle database
 	db, err := sql.Open("oci8", "khanhnv/2305@exax7-scan.vnpthcm.vn:1521/SGN")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return db, err
 	}
-	defer db.Close()
-
+	// defer db.Close()
 	if err = db.Ping(); err != nil {
 		fmt.Printf("Error connecting to the database: %s\n", err)
-		return
+		return db, err
 	}
+	return db, err
 }
