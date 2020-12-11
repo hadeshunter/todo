@@ -6,13 +6,14 @@ services:
     build: .
     restart: always
     depends_on:
-      - db
+      - postgresDB
     environment:
-      DATABASE_URL: postgres://trihm:@db:5432/training_db?sslmode=disable
+      ORACLE_URL: oracle://khanhnv:2305@exax7-scan.vnpthcm.vn:1521/SGN
+      DATABASE_URL: postgres://trihm:@postgresDB:5432/training_db?sslmode=disable
       ADDRESS_DATABASE: address.csv
       SERVER_SECRET: secret
 
-  db:
+  postgresDB:
     ports:
       - 5432:5432
     environment:
