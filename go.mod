@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.14
 	github.com/lib/pq v1.1.1
-	github.com/mattn/go-oci8 v0.1.0
 	github.com/nyaruka/phonenumbers v1.0.56
 	github.com/rs/cors v1.7.0
+	github.com/sijms/go-ora v0.0.0-20201205173311-40e04fc02df4
 )

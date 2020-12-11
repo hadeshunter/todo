@@ -4,7 +4,11 @@ import (
 	"fmt"
 
 	"github.com/hadeshunter/todo/database"
-	_ "github.com/mattn/go-oci8"
+	"github.com/hadeshunter/todo/models"
+
+	// database driver
+	_ "github.com/lib/pq"
+	_ "github.com/sijms/go-ora"
 )
 
 func main() {
@@ -57,23 +61,29 @@ func main() {
 
 	// Connect oracle database
 	db, err := database.ConnectOracle()
+
+	// Create statment
+	stmt, err := db.Prepare("select donvi_id, ten_dv, donvi_cha_id, ten_dvql from ADMIN_HCM.donvi where donvi_id in (:1,:2,:3,:4,:5,:6,:7,:8,:9)")
 	if err != nil {
+		fmt.Println("Error create statment")
+		fmt.Println(err)
 		return
 	}
-	rows, err := db.Query("select donvi_id, ten_dv, donvi_cha_id, ten_dvql from ADMIN_HCM.donvi where donvi_cha_id = :1 and donvi_ql = :2", 41, 0)
+	defer stmt.Close()
+
+	// Query
+	rows, err := stmt.Query(41, 42, 43, 44, 45, 56, 57, 59, 60)
 	if err != nil {
-		fmt.Println("Error fetching ADMIN_HCM.donvi")
+		fmt.Println("Error query")
 		fmt.Println(err)
 		return
 	}
 	defer rows.Close()
 
+	// Extract data using next
 	for rows.Next() {
-		var donviID int
-		var tenDV string
-		var donviChaID int
-		var tenDVQL string
-		rows.Scan(&donviID, &tenDV, &donviChaID, &tenDVQL)
-		println(donviID, tenDV, donviChaID, tenDVQL)
+		var unit models.Unit
+		rows.Scan(&unit.DonviID, &unit.TenDV, &unit.DonviChaID, &unit.TenDVQL)
+		println(unit.DonviID, unit.TenDV, unit.DonviChaID, unit.TenDVQL)
 	}
 }
