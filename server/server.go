@@ -11,9 +11,6 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/gorilla/mux"
-
-	// database driver
-	_ "github.com/lib/pq"
 )
 
 // Server will handle all request via rest API
@@ -35,6 +32,7 @@ func New() *Server {
 func (server *Server) initializeRoutes() {
 	server.router = mux.NewRouter()
 	server.router.Use(authHandler)
+	server.router.HandleFunc("/", server.sayHello).Methods("GET")
 	server.router.HandleFunc("/login", server.handleLogin).Methods("GET")
 	server.router.HandleFunc("/user/create", server.createUser).Methods("POST")
 	server.router.HandleFunc("/user/all", server.getAllUsers).Methods("GET")
@@ -43,6 +41,12 @@ func (server *Server) initializeRoutes() {
 	server.router.HandleFunc("/item/{id:[0-9]+}/complete", server.completeItem).Methods("PUT")
 	server.router.HandleFunc("/item/{id:[0-9]+}/toggle", server.toggleItem).Methods("PUT")
 	server.router.HandleFunc("/item/all", server.listAllItems).Methods("GET")
+	server.router.HandleFunc("/unit/all", server.listAllUnits).Methods("GET")
+}
+
+func (server *Server) sayHello(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello, Wellcome to backend API by Huynh Minh Tri"))
 }
 
 // Start the server
