@@ -1,13 +1,27 @@
 package main
 
 import (
-	"github.com/hadeshunter/todo/server"
-	"github.com/joho/godotenv"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/hadeshunter/todo/database"
+
+	// database driver
+	_ "github.com/lib/pq"
+	_ "github.com/sijms/go-ora"
 )
 
 func main() {
-	// db := database.New(os.Getenv("DATABASE_URL"))
+	db := database.New(os.Getenv("DATABASE_URL"))
+	listUnits, err := db.ListAllUnits()
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	for _, unit := range listUnits {
+		fmt.Printf("%d | %s\n", unit.DonviID, unit.TenDV)
+	}
 	// tasks := []string{
 	// 	"Họp team training",
 	// 	"Chạy thử todo",
@@ -49,7 +63,7 @@ func main() {
 	// 	fmt.Printf("%s %d. %s\n", indicator, index+1, item.Title)
 	// }
 
-	godotenv.Load()
-	server := server.New()
-	server.Start(":5000")
+	// godotenv.Load()
+	// server := server.New()
+	// server.Start(":5000")
 }

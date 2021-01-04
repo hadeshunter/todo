@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
@@ -10,14 +9,14 @@ import (
 
 	// database driver
 	_ "github.com/lib/pq"
-	_ "github.com/sijms/go-ora"
+	go_ora "github.com/sijms/go-ora"
 )
 
 // Database todo
 type Database struct {
 	postgresDB *gorm.DB
 	URL        string
-	oracleDB   *sql.DB
+	oracleDB   *go_ora.Connection
 }
 
 // New database
@@ -32,19 +31,15 @@ func New(url string) *Database {
 // ConnectOracle Connect Oracle Database
 func (db *Database) connectOracle() {
 	// Connect oracle database
-	oracleDB, err := sql.Open("oracle", "oracle://khanhnv:2305@exax7-scan.vnpthcm.vn:1521/SGN")
+	conn, err := go_ora.NewConnection("oracle://khanhnv:2305@exax7-scan.vnpthcm.vn:1521/SGN")
+	// check for error
+	err = conn.Open()
 	if err != nil {
 		fmt.Printf("Error connect to the database: %s\n", err)
 		return
 	}
-	// defer oracleDB.Close()
-
-	// Ping oracle database
-	if err = oracleDB.Ping(); err != nil {
-		fmt.Printf("Error ping to the database: %s\n", err)
-		return
-	}
-	db.oracleDB = oracleDB
+	// defer conn.Close()
+	db.oracleDB = conn
 }
 
 func (db *Database) initialize() {
