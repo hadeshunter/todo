@@ -4,6 +4,10 @@ import (
 	"fmt"
 
 	"github.com/hadeshunter/todo/models"
+	go_ora "github.com/sijms/go-ora"
+
+	// database driver
+	_ "github.com/lib/pq"
 )
 
 // ListAllUnits ...
@@ -28,7 +32,6 @@ func (db *Database) ListAllUnits() ([]models.Unit, error) {
 	// defer rows.Close()
 
 	// // Extract data using next
-	// units := []models.Unit{}
 	// for rows.Next() {
 	// 	var unit models.Unit
 	// 	if err := rows.Scan(&unit.DonviID, &unit.TenDV, &unit.DonviChaID, &unit.TenDVQL); err != nil {
@@ -37,30 +40,30 @@ func (db *Database) ListAllUnits() ([]models.Unit, error) {
 	// 	units = append(units, unit)
 	// }
 
-	query := "SET SERVEROUTPUT ON SIZE 1000000 \n" +
-		"DECLARE \n" +
-		"o_cursor sys_refcursor; \n" +
-		"o_donvi_id admin_hcm.donvi.donvi_id%TYPE; \n" +
-		"o_ten_dv admin_hcm.donvi.ten_dv%TYPE; \n" +
-		"BEGIN \n" +
-		"khanhnv.dashboard.getTTVT(o_cursor); \n" +
-		"LOOP \n" +
-		"FETCH o_cursor \n" +
-		"INTO o_donvi_id,o_ten_dv; \n" +
-		"EXIT WHEN o_cursor%NOTFOUND; \n" +
-		"END LOOP; \n" +
-		"CLOSE o_cursor; \n" +
-		"END; \n" +
-		"/ \n"
-	fmt.Printf(query)
-	stmt, err := db.oracleDB.Prepare(query)
+	cmdText := `
+	DECLARE
+		o_cursor sys_refcursor;
+	BEGIN
+		dashboard.getTTVT(o_cursor);
+		LOOP
+			FETCH o_cursor 
+			INTO :donvi_id,:ten_dv;
+			EXIT WHEN o_cursor%NOTFOUND;
+    END LOOP;
+    CLOSE o_cursor;
+	END;`
 
+	stmt := go_ora.NewStmt(cmdText, db.oracleDB)
 	// defer stmt.Close()
-	result, err := stmt.Query(nil)
+	stmt.AddParam("donvi_id", "", 1000, go_ora.Output)
+	stmt.AddParam("ten_dv", "", 1000, go_ora.Output)
+	_, err := stmt.Exec(nil)
 	if err != nil {
-		fmt.Printf("Error execute query: %s\n", err)
 		return nil, err
 	}
-	fmt.Println(result)
+
+	for _, par := range stmt.Pars {
+		fmt.Println(par.Value)
+	}
 	return units, nil
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -14,14 +13,14 @@ import (
 
 func main() {
 	db := database.New(os.Getenv("DATABASE_URL"))
-	listUnits, err := db.ListAllUnits()
+	_, err := db.ListAllUnits()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, unit := range listUnits {
-		fmt.Printf("%d | %s\n", unit.DonviID, unit.TenDV)
-	}
+	// for _, unit := range listUnits {
+	// 	fmt.Printf("%d | %s\n", unit.DonviID, unit.TenDV)
+	// }
 	// tasks := []string{
 	// 	"Họp team training",
 	// 	"Chạy thử todo",
