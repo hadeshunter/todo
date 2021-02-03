@@ -1,26 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/hadeshunter/todo/database"
-
-	// database driver
-	_ "github.com/lib/pq"
-	_ "github.com/sijms/go-ora"
 )
 
 func main() {
 	db := database.New(os.Getenv("DATABASE_URL"))
-	_, err := db.ListAllUnits()
+	units, err := db.ListAllTTVT()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// for _, unit := range listUnits {
-	// 	fmt.Printf("%d | %s\n", unit.DonviID, unit.TenDV)
-	// }
+	for _, unit := range units {
+		fmt.Printf("%d | %s\n", unit.DonviID, unit.TenDV)
+	}
+
 	// tasks := []string{
 	// 	"Họp team training",
 	// 	"Chạy thử todo",

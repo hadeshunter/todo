@@ -1,7 +1,11 @@
 package database
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/hadeshunter/todo/models"
 	go_ora "github.com/sijms/go-ora"
@@ -13,57 +17,97 @@ import (
 // ListAllUnits ...
 func (db *Database) ListAllUnits() ([]models.Unit, error) {
 	units := []models.Unit{}
-	// // Create statment
-	// stmt, err := db.oracleDB.Prepare("select donvi_id, ten_dv, donvi_cha_id, ten_dvql from ADMIN_HCM.donvi where donvi_id in (:1, :2, :3, :4, :5, :6, :7, :8, :9)")
-	// if err != nil {
-	// 	fmt.Println("Error create statment")
-	// 	fmt.Println(err)
-	// 	return nil, err
-	// }
-	// defer stmt.Close()
 
-	// // Query
-	// rows, err := stmt.Query(41, 42, 43, 44, 45, 56, 57, 59, 60)
-	// if err != nil {
-	// 	fmt.Println("Error query")
-	// 	fmt.Println(err)
-	// 	return nil, err
-	// }
-	// defer rows.Close()
+	conn, err := sql.Open("oracle", "oracle://trihm:2323@exax7-scan.vnpthcm.vn:1521/SGN")
+	if err != nil {
+		fmt.Println("Error connecting DB")
+		return nil, err
+	}
+	defer conn.Close()
 
-	// // Extract data using next
-	// for rows.Next() {
-	// 	var unit models.Unit
-	// 	if err := rows.Scan(&unit.DonviID, &unit.TenDV, &unit.DonviChaID, &unit.TenDVQL); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	units = append(units, unit)
-	// }
+	// Create statment
+	stmt, err := conn.Prepare("select donvi_id, ten_dv from ADMIN_HCM.donvi where donvi_id in (:1, :2, :3, :4, :5, :6, :7, :8, :9)")
+	if err != nil {
+		fmt.Println("Error create statment")
+		fmt.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
 
-	cmdText := `
-	DECLARE
-		o_cursor sys_refcursor;
-	BEGIN
-		dashboard.getTTVT(o_cursor);
-		LOOP
-			FETCH o_cursor 
-			INTO :donvi_id,:ten_dv;
-			EXIT WHEN o_cursor%NOTFOUND;
-    END LOOP;
-    CLOSE o_cursor;
-	END;`
+	// Query
+	rows, err := stmt.Query(41, 42, 43, 44, 45, 56, 57, 59, 60)
+	if err != nil {
+		fmt.Println("Error query")
+		fmt.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
 
+	// Extract data using next
+	for rows.Next() {
+		var unit models.Unit
+		if err := rows.Scan(&unit.DonviID, &unit.TenDV); err != nil {
+			return nil, err
+		}
+		units = append(units, unit)
+	}
+
+	return units, nil
+}
+
+// ListAllTTVT ...
+func (db *Database) ListAllTTVT() ([]models.Unit, error) {
+	units := []models.Unit{}
+	// Create statment
+	cmdText := `BEGIN    
+									test.getTTVT(:1, :2); 
+							END;`
 	stmt := go_ora.NewStmt(cmdText, db.oracleDB)
-	// defer stmt.Close()
-	stmt.AddParam("donvi_id", "", 1000, go_ora.Output)
-	stmt.AddParam("ten_dv", "", 1000, go_ora.Output)
+	stmt.AddParam("1", 41, 41, go_ora.Input)
+	stmt.AddRefCursorParam("2")
+	defer stmt.Close()
+
+	// Query
 	_, err := stmt.Exec(nil)
 	if err != nil {
+		fmt.Println("Error query")
 		return nil, err
 	}
 
-	for _, par := range stmt.Pars {
-		fmt.Println(par.Value)
+	if cursor, ok := stmt.Pars[0].Value.(go_ora.RefCursor); ok {
+		defer cursor.Close()
+		rows, err := cursor.Query()
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			donvi_id int64
+			ten_dv   string
+		)
+		unit := models.Unit{}
+		values := make([]driver.Value, 2)
+
+		for {
+			err = rows.Next(values)
+			// check for error and if == io.EOF break
+			if err == io.EOF {
+				break
+			}
+
+			if donvi_id, ok = values[0].(int64); !ok {
+				return nil, errors.New("Not have value DonviID")
+			}
+
+			if ten_dv, ok = values[1].(string); !ok {
+				return nil, errors.New("Not have value TenDV")
+			}
+
+			unit.DonviID = donvi_id
+			unit.TenDV = ten_dv
+			units = append(units, unit)
+		}
 	}
+
 	return units, nil
 }

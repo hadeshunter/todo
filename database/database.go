@@ -31,7 +31,7 @@ func New(url string) *Database {
 // ConnectOracle Connect Oracle Database
 func (db *Database) connectOracle() {
 	// Connect oracle database
-	conn, err := go_ora.NewConnection("oracle://khanhnv:2305@exax7-scan.vnpthcm.vn:1521/SGN")
+	conn, err := go_ora.NewConnection("oracle://trihm:2323@exax7-scan.vnpthcm.vn:1521/SGN")
 	// check for error
 	err = conn.Open()
 	if err != nil {
